@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Prakruthi AI</title>
+
+  <!-- Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <link rel="stylesheet" href="chat.css">
+</head>
+<body>
+
+<div class="chat-container">
+
+  <!-- HEADER -->
+  <header class="chat-header">
+    <div class="bot-info">
+      <div class="bot-avatar">AI</div>
+      <h2>Prakruthi</h2>
+    </div>
+
+    <div class="actions">
+      <button id="themeToggle" title="Toggle theme">
+        <i class="fa-solid fa-moon"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- CHAT -->
+  <div class="chat-box" id="chatBox"></div>
+
+  <!-- TYPING -->
+  <div class="typing" id="typing">
+    <span></span><span></span><span></span>
+  </div>
+
+  <!-- INPUT -->
+  <div class="chat-input">
+    <input
+      type="text"
+      id="msg"
+      placeholder="Message Prakruthi…"
+      autocomplete="off"
+    />
+    <button id="sendBtn">
+      <i class="fa-solid fa-paper-plane"></i>
+    </button>
+  </div>
+
+</div>
+<script>
+ let voiceMsg = "";
+    const msgInput = document.getElementById("msg");
+    const chatBox = document.querySelector(".chat-box");
+    const sendBtn = document.getElementById("sendBtn");
+
+    async function sendMessage() {
+      if (!msgInput.value.trim()) return;
+      // show user message
+      const userMsg = document.createElement("p");
+      userMsg.textContent = "You : " + msgInput.value;
+      userMsg.className = "user";
+      chatBox.appendChild(userMsg).style.textAlign = "right";
+
+      try {
+        const res = await fetch("https://sih-aixe.onrender.com/ai", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "gpt-4o-mini",
+            messages: [{ role: "user", content: msgInput.value }]
+          })
+        });
+        const data = await res.json();
+
+        const aiMsg = document.createElement("p");
+        if (data.error) {
+          aiMsg.textContent = "Error: " + (data.error.message || data.error);
+          voiceMsg = "Error occurred.";
+        } else if (data.choices && data.choices[0] && data.choices[0].message) {
+          aiMsg.textContent = "Prakruthi : " + data.choices[0].message.content;
+          voiceMsg = data.choices[0].message.content;
+        } else {
+          aiMsg.textContent = "No response from AI.";
+          voiceMsg = "No response from AI.";
+        }
+        aiMsg.className = "ai";
+        chatBox.appendChild(aiMsg);
+        msgInput.value = "";
+        chatBox.scrollTop = chatBox.scrollHeight;
+      } catch (err) {
+        const aiMsg = document.createElement("p");
+        aiMsg.textContent = "Network error.";
+        aiMsg.className = "ai";
+        chatBox.appendChild(aiMsg);
+        voiceMsg = "Network error.";
+      }
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    msgInput.addEventListener('keydown', function(e) {
+      if (e.key === "Enter") sendMessage();
+    });
+
+    const bttn = document.getElementById('btnToSt');
+    bttn.addEventListener('click', () => {
+      if (!voiceMsg) return;
+      const speech = new SpeechSynthesisUtterance();
+      speech.text = voiceMsg;
+      speech.volume = 1;
+      speech.rate = 1;
+      speech.pitch = 1;
+      window.speechSynthesis.speak(speech);
+    });
+  </script>
+  <script>
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement(
+        { pageLanguage: 'en' },
+        'translate'
+      );
+    }
+  </script>
+  <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+</body>
+</html>
